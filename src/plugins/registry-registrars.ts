@@ -18,6 +18,10 @@ import {
   normalizeAgentToolResultMiddlewareRuntimes,
 } from "./agent-tool-result-middleware.js";
 import {
+  isPluginHookAgentScopedSendHookName,
+  normalizeHookEligibleAgentIds,
+} from "./hook-eligibility.js";
+import {
   resolveConversationAccessAllowed,
   resolvePromptInjectionAllowed,
 } from "./hook-policy-decisions.js";
@@ -663,6 +667,9 @@ export function createPluginRegistrars(state: PluginRegistryState) {
       hookName === "reply_dispatch"
         ? normalizeHookEligibility(opts?.eligibleDispatchKinds, isPluginHookReplyDispatchKind)
         : undefined;
+    const eligibleAgentIds = isPluginHookAgentScopedSendHookName(hookName)
+      ? normalizeHookEligibleAgentIds(opts?.eligibleAgentIds)
+      : undefined;
     const matcher =
       hookName === "before_tool_call" || hookName === "after_tool_call"
         ? normalizePluginToolMatcher(opts?.matcher)
@@ -681,6 +688,7 @@ export function createPluginRegistrars(state: PluginRegistryState) {
       ...(timeoutMs !== undefined ? { timeoutMs } : {}),
       ...(eligibleTriggers ? { eligibleTriggers } : {}),
       ...(eligibleDispatchKinds ? { eligibleDispatchKinds } : {}),
+      ...(eligibleAgentIds ? { eligibleAgentIds } : {}),
       ...(hookName === "before_prompt_build" && opts?.requiresToolAuthority === true
         ? { requiresToolAuthority: true }
         : {}),
